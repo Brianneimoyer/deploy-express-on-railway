@@ -25,7 +25,7 @@ app.post("/chat", async (req, res) => {
         },
       }
     );
-    res.json(response.data);
+    res.json({ content: response.data.choices[0].message.content });
   } catch (err) {
     res.status(500).json({ error: err.toString() });
   }
