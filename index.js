@@ -11,20 +11,23 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 app.post("/chat", async (req, res) => {
   console.log("Received /chat request:", req.body);
+  console.log("API Key exists:", !!ANTHROPIC_API_KEY);
+  console.log("API Key first 10 chars:", ANTHROPIC_API_KEY?.substring(0, 10));
   
   try {
-    // STRIP TOPICS FROM MESSAGES FOR CLAUDE API
     const cleanMessages = req.body.messages.map(msg => ({
       role: msg.role,
       content: msg.content
     }));
+    
+    console.log("Sending to Claude:", cleanMessages.length, "messages");
     
     const response = await axios.post(
       "https://api.anthropic.com/v1/messages",
       {
         model: "claude-3-sonnet-20240229",
         max_tokens: 1000,
-        messages: cleanMessages, // Use cleaned messages
+        messages: cleanMessages,
         temperature: 0.7,
       },
       {
@@ -36,7 +39,7 @@ app.post("/chat", async (req, res) => {
       }
     );
     
-    console.log("Claude response:", response.data);
+    console.log("Claude response received!");
     res.json({ content: response.data.content[0].text });
     
   } catch (err) {
