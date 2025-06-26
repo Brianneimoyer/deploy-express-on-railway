@@ -13,12 +13,18 @@ app.post("/chat", async (req, res) => {
   console.log("Received /chat request:", req.body);
   
   try {
+    // STRIP TOPICS FROM MESSAGES FOR CLAUDE API
+    const cleanMessages = req.body.messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    
     const response = await axios.post(
       "https://api.anthropic.com/v1/messages",
       {
-        model: "claude-3-sonnet-20240229", 
+        model: "claude-3-sonnet-20240229",
         max_tokens: 1000,
-        messages: req.body.messages,
+        messages: cleanMessages, // Use cleaned messages
         temperature: 0.7,
       },
       {
