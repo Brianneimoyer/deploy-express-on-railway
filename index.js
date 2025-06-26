@@ -9,10 +9,14 @@ app.use(express.json());
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
+// DEBUG: Log API key status on startup
+console.log("=== STARTUP DEBUG ===");
+console.log("API Key exists:", !!ANTHROPIC_API_KEY);
+console.log("API Key first 15 chars:", ANTHROPIC_API_KEY?.substring(0, 15));
+
 app.post("/chat", async (req, res) => {
-  console.log("Received /chat request:", req.body);
-  console.log("API Key exists:", !!ANTHROPIC_API_KEY);
-  console.log("API Key first 10 chars:", ANTHROPIC_API_KEY?.substring(0, 10));
+  console.log("=== CHAT REQUEST DEBUG ===");
+  console.log("Messages received:", req.body.messages?.length);
   
   try {
     const cleanMessages = req.body.messages.map(msg => ({
@@ -20,7 +24,8 @@ app.post("/chat", async (req, res) => {
       content: msg.content
     }));
     
-    console.log("Sending to Claude:", cleanMessages.length, "messages");
+    console.log("Clean messages prepared:", cleanMessages.length);
+    console.log("About to call Claude API...");
     
     const response = await axios.post(
       "https://api.anthropic.com/v1/messages",
@@ -39,11 +44,13 @@ app.post("/chat", async (req, res) => {
       }
     );
     
-    console.log("Claude response received!");
+    console.log("✅ Claude API SUCCESS!");
+    console.log("Response received, sending back to client...");
     res.json({ content: response.data.content[0].text });
     
   } catch (err) {
-    console.error("Claude API error:", err.response?.data || err.message);
+    console.log("❌ CLAUDE API ERROR:");
+    console.error("Error details:", err.response?.data || err.message);
     res.status(500).json({ error: err.toString() });
   }
 });
