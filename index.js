@@ -1,5 +1,4 @@
-🔄 YES! COMPLETE REPLACEMENT FOR CLAUDE API:
-javascriptconst express = require("express");
+const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 require("dotenv").config();
@@ -17,7 +16,7 @@ app.post("/chat", async (req, res) => {
     const response = await axios.post(
       "https://api.anthropic.com/v1/messages",
       {
-        model: "claude-3-sonnet-20240229", // or "claude-3-opus-20240229" for premium
+        model: "claude-3-sonnet-20240229", 
         max_tokens: 1000,
         messages: req.body.messages,
         temperature: 0.7,
