@@ -26,6 +26,13 @@ app.post("/chat", async (req, res) => {
         role: msg.role,
         content: msg.content
       }));
+
+    if (conversationMessages.length === 0) {
+      conversationMessages.push({
+      role: "user",
+      content: "Provide a brief response based on the system context."
+    });
+  }
     
     console.log("System messages combined:", systemMessages.length, "chars");
     console.log("Conversation messages:", conversationMessages.length);
