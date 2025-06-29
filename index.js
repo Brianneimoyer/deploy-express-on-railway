@@ -49,7 +49,12 @@ app.post("/chat", async (req, res) => {
     );
     
     console.log("✅ Claude API SUCCESS!");
-    res.json({ content: response.data.content[0].text });
+    if (response.data.content && response.data.content[0] && response.data.content[0].text) {
+      res.json({ text: response.data.content[0].text, content: response.data.content[0].text });
+    } else {
+      console.log("❌ Invalid Anthropic response structure:", response.data);
+      res.status(500).json({ error: "Invalid API response structure" });
+  }
     
   } catch (err) {
     console.log("❌ CLAUDE API ERROR:");
