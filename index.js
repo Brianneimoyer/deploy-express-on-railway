@@ -20,7 +20,7 @@ app.post("/chat", async (req, res) => {
       .map(msg => msg.content)
       .join("\n\n");
     
-    const conversationMessages = req.body.messages
+    let conversationMessages = req.body.messages
       .filter(msg => msg.role !== "system")
       .map(msg => ({
         role: msg.role,
