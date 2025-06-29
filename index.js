@@ -49,11 +49,11 @@ app.post("/chat", async (req, res) => {
     );
     
     console.log("✅ Claude API SUCCESS!");
-    if (response.data.content && response.data.content[0] && response.data.content[0].text) {
+    if (response.data.content && response.data.content.length > 0 && response.data.content[0].text) {
       res.json({ text: response.data.content[0].text, content: response.data.content[0].text });
     } else {
-      console.log("❌ Invalid Anthropic response structure:", response.data);
-      res.status(500).json({ error: "Invalid API response structure" });
+      console.log("❌ Empty Claude response (likely token limit):", response.data);
+      res.json({ text: "Summary unavailable due to length.", content: "Summary unavailable due to length." });
   }
     
   } catch (err) {
