@@ -12,6 +12,42 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 app.post("/chat", async (req, res) => {
   console.log("=== CHAT REQUEST DEBUG ===");
   console.log("Messages received:", req.body.messages?.length);
+
+  app.post('/supabase-proxy', async (req, res) => {
+  try {
+    const { action, table, data, query } = req.body;
+    
+    const supabaseUrl = 'https://kiajxqdnzlnczshtfcdq.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpYWp4cWRuemxuY3pzaHRmY2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMTEyMzQsImV4cCI6MjA2Njg4NzIzNH0.CSN2qoIiR61zKfSDys-zOUjYJgtNmOJX0thDO8b3Ikk';
+    
+    let method = 'GET';
+    let url = `${supabaseUrl}/rest/v1/${table}`;
+    let body = null;
+    
+    if (action === 'select') {
+      url += query ? `?${query}` : '?select=*';
+    } else if (action === 'insert') {
+      method = 'POST';
+      body = JSON.stringify(data);
+    }
+    
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json'
+      },
+      body
+    });
+    
+    const result = await response.json();
+    res.json(result);
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
   
   try {
     // SEPARATE SYSTEM MESSAGES FROM USER/ASSISTANT MESSAGES
