@@ -9,11 +9,13 @@ app.use(express.json());
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-app.post("/chat", async (req, res) => {
-  console.log("=== CHAT REQUEST DEBUG ===");
-  console.log("Messages received:", req.body.messages?.length);
+// TEST PROXY ROUTE
+app.post('/test-proxy', (req, res) => {
+  res.json({ message: "Proxy route working!" });
+});
 
-  app.post('/supabase-proxy', async (req, res) => {
+// SUPABASE PROXY ROUTE
+app.post('/supabase-proxy', async (req, res) => {
   try {
     const { action, table, data, query } = req.body;
     
@@ -48,6 +50,11 @@ app.post("/chat", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// CHAT ROUTE
+app.post("/chat", async (req, res) => {
+  console.log("=== CHAT REQUEST DEBUG ===");
+  console.log("Messages received:", req.body.messages?.length);
   
   try {
     // SEPARATE SYSTEM MESSAGES FROM USER/ASSISTANT MESSAGES
@@ -65,10 +72,10 @@ app.post("/chat", async (req, res) => {
 
     if (conversationMessages.length === 0) {
       conversationMessages.push({
-      role: "user",
-      content: "Provide a brief response based on the system context."
-    });
-  }
+        role: "user",
+        content: "Provide a brief response based on the system context."
+      });
+    }
     
     console.log("System messages combined:", systemMessages.length, "chars");
     console.log("Conversation messages:", conversationMessages.length);
@@ -92,12 +99,13 @@ app.post("/chat", async (req, res) => {
     );
     
     console.log("✅ Claude API SUCCESS!");
+    
     if (response.data.content && response.data.content.length > 0 && response.data.content[0].text) {
       res.json({ text: response.data.content[0].text, content: response.data.content[0].text });
     } else {
       console.log("❌ Empty Claude response (likely token limit):", response.data);
       res.json({ text: "Summary unavailable due to length.", content: "Summary unavailable due to length." });
-  }
+    }
     
   } catch (err) {
     console.log("❌ CLAUDE API ERROR:");
