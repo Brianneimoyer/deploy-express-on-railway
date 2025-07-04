@@ -54,9 +54,17 @@ app.post('/supabase-proxy', async (req, res) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.log("=== SUPABASE ERROR ===");
-      console.log("Error response:", errorText);
-      return res.status(response.status).json({ error: errorText });
+
+      // Try to parse as JSON error (cleaner logging)
+      try {
+        const jsonError = JSON.parse(errorText);
+        console.log("❌ SUPABASE JSON ERROR:", JSON.stringify(jsonError, null, 2));
+        return res.status(response.status).json({ error: jsonError });
+      } catch (err) {
+        // Fallback if it's plain text
+        console.log("❌ SUPABASE TEXT ERROR:", errorText);
+        return res.status(response.status).json({ error: errorText });
+      }
     }
 
     const result = await response.json();
