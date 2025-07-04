@@ -47,13 +47,26 @@ app.post('/supabase-proxy', async (req, res) => {
       },
       body
     });
-    
+
+    console.log("=== SUPABASE FETCH RESPONSE ===");
+    console.log("Status:", response.status);
+    console.log("Status Text:", response.statusText);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log("=== SUPABASE ERROR ===");
+      console.log("Error response:", errorText);
+      return res.status(response.status).json({ error: errorText });
+    }
+
     const result = await response.json();
     console.log("=== SUPABASE RESPONSE ===");
     console.log("Response from Supabase:", JSON.stringify(result, null, 2));
     res.json({ data: result });
     
   } catch (error) {
+    console.log("=== CATCH ERROR ===");
+    console.log("Error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
