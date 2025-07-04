@@ -2,20 +2,25 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 require("dotenv").config();
-
 const app = express();
 app.use(cors());
 app.use(express.json());
-
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+app.get('/', (req, res) => {
+  res.json({ message: "Railway server is running!" });
+});
 
 // TEST PROXY ROUTE
 app.post('/test-proxy', (req, res) => {
   res.json({ message: "Proxy route working!" });
 });
 
-// SUPABASE PROXY ROUTE
+// SUPABASE PROXY ROUTE (ONLY ONE!)
 app.post('/supabase-proxy', async (req, res) => {
+  console.log("=== SUPABASE PROXY REQUEST RECEIVED ===");
+  console.log("Request body:", JSON.stringify(req.body, null, 2));
+  
   try {
     const { action, table, data, query } = req.body;
     
