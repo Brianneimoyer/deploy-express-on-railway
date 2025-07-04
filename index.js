@@ -67,11 +67,18 @@ app.post('/supabase-proxy', async (req, res) => {
       }
     }
 
-    const result = await response.json();
-    if (req.body.action === 'insert') {
-    console.log("=== INSERT OPERATION RESULT ===");
-    console.log("Insert result:", JSON.stringify(result, null, 2));
-  }
+    let result;
+    if (response.status === 201 && action === 'insert') {
+      // Insert operations often return empty body
+      result = { success: true, status: 'created' };
+    } else {
+      result = await response.json();
+    }
+
+if (req.body.action === 'insert') {
+  console.log("=== INSERT OPERATION RESULT ===");
+  console.log("Insert result:", JSON.stringify(result, null, 2));
+}
     console.log("=== SUPABASE RESPONSE ===");
     console.log("Response from Supabase:", JSON.stringify(result, null, 2));
     res.json({ data: result });
