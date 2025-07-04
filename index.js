@@ -44,7 +44,7 @@ app.post('/supabase-proxy', async (req, res) => {
     });
     
     const result = await response.json();
-    res.json(result);
+    res.json({ data: result });
     
   } catch (error) {
     res.status(500).json({ error: error.message });
