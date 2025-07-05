@@ -5,9 +5,37 @@ require("dotenv").config();
 const app = express();
 const multer = require('multer');
 const pdf = require('pdf-parse');
-const axios = require('axios');
+
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Configure multer for file uploads
+const upload = multer({
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow specific file types
+    const allowedTypes = [
+      'application/pdf', 
+      'image/jpeg', 
+      'image/png', 
+      'image/gif', 
+      'text/plain',
+      'text/markdown',
+      'application/json',
+      'text/csv'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Unsupported file type'), false);
+    }
+  }
+});
+
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 app.get('/', (req, res) => {
@@ -153,6 +181,139 @@ app.post("/chat", async (req, res) => {
     console.log("❌ CLAUDE API ERROR:");
     console.error("Error details:", err.response?.data || err.message);
     res.status(500).json({ error: err.toString() });
+  }
+});
+
+// Web Search Endpoint
+app.post('/web-search', async (req, res) => {
+  try {
+    const { query, userId, maxResults = 5 } = req.body;
+    
+    console.log('🌐 Web search request:', { query, userId, maxResults });
+    
+    // For now, we'll return mock results for testing
+    // You can add real web search API later
+    const apiKey = process.env.BING_SEARCH_API_KEY;
+    
+    if (!apiKey) {
+      console.log('⚠️ No Bing API key found, returning mock results');
+      // Return mock results for testing
+      return res.json([
+        {
+          title: `Mock Result for "${query}"`,
+          url: "https://example.com/1",
+          snippet: `This is a mock search result for testing the query: ${query}. Web search is working!`
+        },
+        {
+          title: `Another Result for "${query}"`,
+          url: "https://example.com/2", 
+          snippet: `Additional mock result to demonstrate web search functionality for: ${query}`
+        }
+      ]);
+    }
+    
+    // Real Bing search (when you add API key later)
+    const searchUrl = `https://api.bing.microsoft.com/v7.0/search`;
+    
+    const response = await axios.get(searchUrl, {
+      headers: {
+        'Ocp-Apim-Subscription-Key': apiKey
+      },
+      params: {
+        q: query,
+        count: maxResults,
+        responseFilter: 'Webpages'
+      }
+    });
+    
+    const results = response.data.webPages?.value?.map(item => ({
+      title: item.name,
+      url: item.url,
+      snippet: item.snippet
+    })) || [];
+    
+    console.log('✅ Web search results:', results.length);
+    res.json(results);
+    
+  } catch (error) {
+    console.error('❌ Web search error:', error);
+    res.status(500).json({ error: 'Web search failed' });
+  }
+});
+
+// Image Analysis Endpoint
+app.post('/analyze-image', async (req, res) => {
+  try {
+    const { imageData, fileName, userId } = req.body;
+    
+    console.log('🖼️ Image analysis request:', { fileName, userId });
+    
+    // For now, return a simple analysis
+    // Later you can integrate with OpenAI GPT-4V or Google Vision
+    const mockAnalysis = {
+      description: `Analysis of image: ${fileName}`,
+      objects: ['object1', 'object2'],
+      text: 'No text detected',
+      analysis: `This appears to be an uploaded image called "${fileName}". Full AI analysis would require additional API integration with vision AI services.`,
+      confidence: 0.85,
+      suggestions: [
+        'This image has been successfully received',
+        'Image format appears to be supported', 
+        'Ready for AI analysis when vision API is configured'
+      ]
+    };
+    
+    console.log('✅ Image analysis complete');
+    res.json(mockAnalysis);
+    
+  } catch (error) {
+    console.error('❌ Image analysis error:', error);
+    res.status(500).json({ error: 'Image analysis failed' });
+  }
+});
+
+// PDF Processing Endpoint
+app.post('/process-pdf', upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No PDF file uploaded' });
+    }
+    
+    console.log('📄 PDF processing request:', { 
+      fileName: req.file.originalname,
+      size: req.file.size 
+    });
+    
+    // Extract text from PDF
+    const pdfData = await pdf(req.file.buffer);
+    
+    const result = {
+      text: pdfData.text,
+      metadata: {
+        pages: pdfData.numpages,
+        info: pdfData.info,
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        wordCount: pdfData.text.split(/\s+/).length,
+        charCount: pdfData.text.length
+      },
+      summary: `PDF "${req.file.originalname}" contains ${pdfData.numpages} pages with ${pdfData.text.split(/\s+/).length} words.`
+    };
+    
+    console.log('✅ PDF processed successfully:', {
+      pages: result.metadata.pages,
+      textLength: result.text.length,
+      wordCount: result.metadata.wordCount
+    });
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ PDF processing error:', error);
+    res.status(500).json({ 
+      error: 'PDF processing failed',
+      details: error.message
+    });
   }
 });
 
